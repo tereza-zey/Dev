@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "940873277886",
+    "project_id": "nstapp-2d25a",
+    "storage_bucket": "nstapp-2d25a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:940873277886:android:e54602a4339a3b417419ef",
+        "android_client_info": {
+          "package_name": "com.nstapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDtNGO_hdQDickPlHXfXeHNUKe6IcNP-WY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
