@@ -33,7 +33,7 @@ jobs:
           xcodebuild build -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 14,OS=16.4"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build
           path: ios/build  # Chemin vers les artefacts de build que vous souhaitez télécharger
