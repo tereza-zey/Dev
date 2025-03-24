@@ -17,7 +17,12 @@ if linkage != nil
 end
 
 target 'NSTApp' do
-  config = use_native_modules!
+  # Utilisation de React Native
+  use_react_native!(
+    :path => File.join(__dir__, '../node_modules/react-native'),
+    :hermes_enabled => true,
+    :fabric_enabled => false
+  )
 
   # Dépendances du projet
   pod 'Firebase/Core', :modular_headers => true
@@ -31,23 +36,15 @@ target 'NSTApp' do
   pod 'RNFBMessaging', :path => '../node_modules/@react-native-firebase/messaging', :modular_headers => true
   pod 'RNPermissions', :path => '../node_modules/react-native-permissions', :modular_headers => true
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo', :modular_headers => true
-  
+
   pod 'react-native-webview', :path => '../node_modules/react-native-webview', :modular_headers => true
   pod 'react-native-geolocation', :path => '../node_modules/@react-native-community/geolocation', :modular_headers => true
-
-  use_react_native!(
-    :path => config[:reactNativePath],
-    # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/..",
-    :hermes_enabled => true
-  )
 end
 
-# Bloc unique pour post-installation
 post_install do |installer|
+  # Ajout des chemins pour les headers et frameworks
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
-      # Ajouter les Header Search Paths
       config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React"
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Base"
@@ -55,7 +52,6 @@ post_install do |installer|
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/ReactCommon"
       config.build_settings['HEADER_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Accessibility.framework/Headers'
 
-      # Ajouter les Framework Search Paths
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods"
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods/FirebaseCore"
@@ -63,10 +59,10 @@ post_install do |installer|
     end
   end
 
-  # Ajout du post_install pour React Native
+  # Appel à la méthode React Native post-install
   react_native_post_install(
     installer,
-    config[:reactNativePath],
+    File.join(__dir__, '../node_modules/react-native'),
     :mac_catalyst_enabled => false
   )
 end
