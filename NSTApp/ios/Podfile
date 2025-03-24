@@ -16,6 +16,8 @@ if linkage != nil
   use_frameworks! :linkage => linkage.to_sym
 end
 
+config = nil
+
 target 'NSTApp' do
 
   config = use_native_modules!
