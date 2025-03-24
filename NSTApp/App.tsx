@@ -11,15 +11,46 @@ import {
   Text
 } from 'react-native';
 import {WebView} from 'react-native-webview';
-import {initializeFirebase, requestNotificationPermission} from './src/firebase';
+import messaging from '@react-native-firebase/messaging';
+import { getApp } from '@react-native-firebase/app';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
-import RNPermissions, {NotificationOption} from 'react-native-permissions';
 import NetInfo from '@react-native-community/netinfo';
 
+// Fonction pour initialiser Firebase
+const initializeFirebase = () => {
+  try {
+    getApp(); // Initialise Firebase
+    return true;
+  } catch (error) {
+    console.error("Erreur lors de l'initialisation de Firebase:", error);
+    return false;
+  }
+};
 
+// Fonction pour demander les permissions de notification
+const requestNotificationPermission = async () => {
+  try {
+    const authStatus = await messaging().requestPermission();
+    const enabled =
+      authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+    if (enabled) {
+      console.log('Authorization status:', authStatus);
+      const fcmToken = await messaging().getToken();
+      if (fcmToken) {
+        console.log('FCM Token:', fcmToken);
+        return fcmToken;
+      }
+    }
+  } catch (error) {
+    console.error("Erreur lors de la demande de permission de notification:", error);
+  }
+  return null;
+};
 
 function App(): React.JSX.Element {
-  const [isConnected, setIsConnected] = useState<boolean>(true); // État pour surveiller la connectivité
+  const [isConnected, setIsConnected] = useState<boolean>(true);
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [locationPermission, setLocationPermission] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<string | null>(null);
@@ -35,10 +66,8 @@ function App(): React.JSX.Element {
     };
   }, []);
 
-  // Fonction pour vérifier et envoyer le statut des permissions
   const checkAndSendPermissionsStatus = async () => {
     try {
-      // Vérifier la permission de localisation
       const locationPerm = Platform.select({
         android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
         ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
@@ -49,11 +78,9 @@ function App(): React.JSX.Element {
         setLocationPermission(locationStatus);
       }
 
-      // Vérifier la permission de notification
-      const notificationStatus = await RNPermissions.checkNotifications();
-      setNotificationPermission(notificationStatus.status);
+      const notificationStatus = await messaging().hasPermission();
+      setNotificationPermission(notificationStatus ? 'granted' : 'denied');
 
-      // Envoyer les statuts à la WebView
       if (webViewRef.current) {
         webViewRef.current.injectJavaScript(`
           (function() {
@@ -68,57 +95,52 @@ function App(): React.JSX.Element {
           })();
         `);
         console.log("Statut des permissions envoyé à la WebView");
-        if(fcmToken) {
+        if (fcmToken) {
           webViewRef.current.injectJavaScript(`
             (function() {
               window.postMessage(JSON.stringify({
                 type: 'FCM_TOKEN_AVAILABLE',
-                token : '${fcmToken}'
+                token: '${fcmToken}'
               }), '*');
               true;
             })();
           `);
           console.log("Token FCM envoyé à la WebView : ", fcmToken);
         }
-        
       }
     } catch (error) {
       console.error("Erreur lors de la vérification des permissions:", error);
     }
   };
 
-  // Effet pour initialiser Firebase et vérifier les permissions au démarrage
   useEffect(() => {
     const firebaseInitialized = initializeFirebase();
-    
+
     if (firebaseInitialized) {
       const getPermissionAndToken = async () => {
         const token = await requestNotificationPermission();
         setFcmToken(token);
         await checkAndSendPermissionsStatus();
       };
-      
+
       getPermissionAndToken();
     }
 
     const onBackPress = () => {
       if (webViewRef.current) {
-        webViewRef.current.goBack(); // Navigue vers la page précédente
-        return true; // Empêche la fermeture de l'application
+        webViewRef.current.goBack();
+        return true;
       }
-      return false; // Laisse le comportement par défaut (fermer l'application)
+      return false;
     };
 
-    // Ajout du listener pour gérer l'événement retour
     BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-    // Nettoyage lors du démontage du composant
     return () => {
-      //BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+      BackHandler.removeEventListener('hardwareBackPress', onBackPress);
     };
   }, []);
 
-  // Fonction pour ouvrir l'écran système de localisation
   const openLocationSettings = async () => {
     try {
       const permission = Platform.select({
@@ -129,12 +151,11 @@ function App(): React.JSX.Element {
       if (!permission) return;
 
       const result = await check(permission);
-      
+
       if (result === RESULTS.DENIED) {
         const requestResult = await request(permission);
         setLocationPermission(requestResult);
-        
-        // Envoyer le nouveau statut à la WebView
+
         if (webViewRef.current) {
           webViewRef.current.injectJavaScript(`
             (function() {
@@ -170,21 +191,27 @@ function App(): React.JSX.Element {
     }
   };
 
-  // Fonction pour ouvrir l'écran système de notification
   const openNotificationSettings = async () => {
+    console.log("Opening Notifications Settings");
     try {
-      const options: NotificationOption[] = ['alert', 'badge', 'sound'];
-      const response = await RNPermissions.requestNotifications(options);
-      setNotificationPermission(response.status);
-      
-      if (response.status === RESULTS.GRANTED) {
-        const token = await requestNotificationPermission();
+      // Demande la permission pour les notifications
+      const response = await messaging().requestPermission();
+      // Détermine si la permission est accordée ou non
+      setNotificationPermission(response === messaging.AuthorizationStatus.AUTHORIZED ? 'granted' : 'denied');
+  
+      if (response === messaging.AuthorizationStatus.AUTHORIZED) {
+        // Si l'utilisateur a autorisé les notifications, on peut demander un token
+        const token = await messaging().getToken();
         if (token) {
           setFcmToken(token);
         }
+      } else {
+        if (Platform.OS === 'ios') {
+          Linking.openURL('app-settings:');
+        }
       }
-      
-      // Envoyer le nouveau statut à la WebView
+  
+      // Injection dans le WebView
       if (webViewRef.current) {
         webViewRef.current.injectJavaScript(`
           (function() {
@@ -192,7 +219,7 @@ function App(): React.JSX.Element {
               type: 'PERMISSIONS_STATUS',
               permissions: {
                 location: '${locationPermission}',
-                notifications: '${response.status}'
+                notifications: '${response === messaging.AuthorizationStatus.AUTHORIZED ? 'granted' : 'denied'}'
               }
             }), '*');
             true;
@@ -204,17 +231,17 @@ function App(): React.JSX.Element {
       Alert.alert(
         'Erreur',
         'Impossible de demander la permission de notification',
-        [{text: 'OK'}],
+        [{ text: 'OK' }],
       );
     }
   };
   
-  // Gestionnaire des messages de la WebView
+
   const handleWebViewMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       console.log("Message reçu de la WebView:", data);
-      
+
       if (data.type === 'OPEN_PERMISSIONS') {
         if (data.permission === 'location') {
           await openLocationSettings();
@@ -223,6 +250,7 @@ function App(): React.JSX.Element {
         }
       }
       if (data.type === 'WEBVIEW_READY') {
+        await refreshFcmToken();
         await checkAndSendPermissionsStatus();
       }
     } catch (error) {
@@ -230,11 +258,10 @@ function App(): React.JSX.Element {
     }
   };
 
-  // Effet pour envoyer le token FCM lorsqu'il est disponible
   useEffect(() => {
     if (fcmToken && webViewRef.current) {
       const tokenMessage = JSON.stringify({
-        type: 'FCM_TOKEN', 
+        type: 'FCM_TOKEN',
         token: fcmToken
       });
       webViewRef.current.injectJavaScript(`
@@ -249,12 +276,17 @@ function App(): React.JSX.Element {
           true;
         })();
       `);
-      
+
       console.log("Token FCM envoyé à la WebView : ", fcmToken);
     }
   }, [fcmToken]);
 
-  
+  const refreshFcmToken = async () => {
+    const token = await requestNotificationPermission();
+    setFcmToken(token);
+    await checkAndSendPermissionsStatus();
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />

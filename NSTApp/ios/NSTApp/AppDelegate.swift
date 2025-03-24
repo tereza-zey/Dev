@@ -2,76 +2,102 @@ import UIKit
 import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
-
 import Firebase
 import FirebaseMessaging
 import UserNotifications
 
 @main
 class AppDelegate: RCTAppDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
-
+    
     override func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         self.moduleName = "NSTApp"
         self.dependencyProvider = RCTAppDependencyProvider()
-
-        // Configure Firebase
+        
+        // 1. Configurer Firebase en premier
         FirebaseApp.configure()
-
-        // Configurer Firebase Messaging
-        Messaging.messaging().delegate = self
-
-        // Demander l'autorisation pour les notifications
-        if #available(iOS 10.0, *) {
-            UNUserNotificationCenter.current().delegate = self
-            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-            UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, error in
-                if let error = error {
-                    print("Error requesting notification authorization: \(error.localizedDescription)")
-                }
-            }
-        } else {
-            let settings: UIUserNotificationSettings = UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
-            application.registerUserNotificationSettings(settings)
-        }
-
-        application.registerForRemoteNotifications()
-
-        // You can add your custom initial props in the dictionary below.
-        // They will be passed down to the ViewController used by React Native.
+        
+        // 2. Configurer les delegates de notification
+        configureNotifications(application)
+        
+        // Props initiales pour React Native
         self.initialProps = [:]
-
+        
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
-
-    // Gérer l'enregistrement du token de notification
+    
+    private func configureNotifications(_ application: UIApplication) {
+        // Configurer Messaging
+        Messaging.messaging().delegate = self
+        
+        // Configurer les notifications
+        UNUserNotificationCenter.current().delegate = self
+        
+        let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { [weak self] granted, error in
+            if let error = error {
+                print("Erreur lors de la demande de permission notification : \(error.localizedDescription)")
+                return
+            }
+            
+            print("Permission notifications accordée: \(granted)")
+            
+            if granted {
+                DispatchQueue.main.async {
+                    application.registerForRemoteNotifications()
+                }
+            }
+        }
+    }
+    
+    // MARK: - Gestion des tokens
+    
     override func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        //super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
         Messaging.messaging().apnsToken = deviceToken
     }
-
-    // Gérer les notifications reçues en arrière-plan
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+    
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let fcmToken = fcmToken else { return }
+        print("Token Firebase reçu: \(fcmToken)")
+        
+        // Envoyer le token à votre serveur si nécessaire
+        let dataDict: [String: String] = ["token": fcmToken]
+        NotificationCenter.default.post(
+            name: Notification.Name("FCMToken"),
+            object: nil,
+            userInfo: dataDict
+        )
+    }
+    
+    // MARK: - Autres méthodes nécessaires
+    
+    override func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        print("Échec de l'enregistrement aux notifications: \(error.localizedDescription)")
+    }
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                              willPresent notification: UNNotification,
+                              withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         completionHandler([.alert, .badge, .sound])
     }
-
-    // Gérer les actions sur les notifications
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                              didReceive response: UNNotificationResponse,
+                              withCompletionHandler completionHandler: @escaping () -> Void) {
         completionHandler()
     }
-
-    // Gérer les tokens de messagerie
-    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
-        print("Firebase registration token: \(String(describing: fcmToken))")
-    }
-
+    
+    // MARK: - Configuration React Native
+    
     override func sourceURL(for bridge: RCTBridge) -> URL? {
-        self.bundleURL()
+        return self.bundleURL()
     }
-
+    
     override func bundleURL() -> URL? {
-#if DEBUG
-        RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
-#else
-        Bundle.main.url(forResource: "main", withExtension: "jsbundle")
-#endif
+        #if DEBUG
+        return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
+        #else
+        return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
+        #endif
     }
 }

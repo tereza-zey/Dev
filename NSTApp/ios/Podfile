@@ -66,7 +66,7 @@ end
 post_install do |installer|
 
    # Chemin vers GoogleService-Info.plist (ajusté à l'emplacement de ton Info.plist)
-  google_service_plist_path = "#{Pod::Config.instance.installation_root}/../GoogleService-Info.plist"
+  google_service_plist_path = "#{Pod::Config.instance.installation_root}/NSTApp/GoogleService-Info.plist"
   
   # Répertoire du projet Xcode
   project_dir = "#{installer.pods_project.path}/../NSTApp/"
@@ -76,8 +76,19 @@ post_install do |installer|
     system("cp #{google_service_plist_path} #{project_dir}/GoogleService-Info.plist")
     puts "GoogleService-Info.plist a été ajouté au projet."
   else
-    puts "Le fichier GoogleService-Info.plist est introuvable dans le répertoire racine."
+    puts "Le fichier #{Pod::Config.instance.installation_root}/../NSTApp/GoogleService-Info.plist est introuvable dans le répertoire racine."
   end
+  
+  entitlements_file_path = "#{Pod::Config.instance.installation_root}/NSTApp.entitlements"
+    
+
+    # Vérifie si le fichier NSTApp.entitlements existe et copie-le dans le répertoire Xcode
+    if File.exist?(entitlements_file_path)
+      system("cp #{entitlements_file_path} #{project_dir}/NSTApp.entitlements")
+      puts "NSTApp.entitlements a été ajouté au projet."
+    else
+      puts "Le fichier #{entitlements_file_path} est introuvable dans le répertoire racine."
+    end
   # Ajout des chemins pour les headers et frameworks
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
