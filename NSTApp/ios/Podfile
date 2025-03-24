@@ -64,6 +64,18 @@ target 'NSTApp' do
 end
 
 post_install do |installer|
+
+  # Copier le fichier GoogleService-Info.plist dans le répertoire de ton projet Xcode
+  google_service_plist_path = "#{Pod::Config.instance.installation_root}/../GoogleService-Info.plist"
+  project_dir = "#{installer.pods_project.path}/../"
+
+  # Copie le fichier GoogleService-Info.plist dans le répertoire du projet Xcode
+  if File.exist?(google_service_plist_path)
+    system("cp #{google_service_plist_path} #{project_dir}/NSTApp/GoogleService-Info.plist")
+    puts "GoogleService-Info.plist a été ajouté au projet."
+  else
+    puts "Le fichier GoogleService-Info.plist est introuvable dans Config/."
+  end
   # Ajout des chemins pour les headers et frameworks
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
