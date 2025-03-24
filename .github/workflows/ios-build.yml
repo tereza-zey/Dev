@@ -13,27 +13,37 @@ jobs:
     runs-on: macos-latest  # Utilise le dernier runner macOS
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2  # Cloner le dépôt
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'  # Spécifiez la version de Node.js que vous utilisez
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'  # Spécifie la version de Node.js que tu utilises
 
-      - name: Install dependencies
-        run: npm install  # Installe les dépendances npm
+    - name: Clean npm cache
+      run: npm cache clean --force  # Nettoie le cache npm
 
-      - name: Install CocoaPods dependencies
-        run: cd ios && pod install  # Installe les dépendances CocoaPods
+    - name: Install dependencies
+      run: npm install  # Installe les dépendances npm
 
-      - name: Build iOS
-        run: |
-          xcodebuild clean -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme
-          xcodebuild build -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme -sdk iphonesimulator -destination "platform=iOS Simulator,name=iPhone 14,OS=16.4"
+    - name: Install CocoaPods dependencies
+      run: cd ios && pod install --verbose  # Installe les dépendances CocoaPods et ajoute --verbose pour plus de logs
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          path: ios/build  # Chemin vers les artefacts de build que vous souhaitez télécharger
+    - name: List available simulators
+      run: xcrun simctl list devices  # Liste les simulateurs disponibles
+
+    - name: Build iOS
+      run: |
+        xcodebuild clean -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme  # Nettoie le projet avec le bon workspace et scheme
+        xcodebuild build -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=16.4' -verbose  # Lance la build sur un simulateur spécifique et affiche les logs détaillés
+      #env:
+        # Ajoute ici des variables d'environnement nécessaires, comme les clés de signature, MATCH_PASSWORD, etc.
+        #MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2  # Télécharge les artefacts de la build
+      with:
+        name: build
+        path: ios/build  # Spécifie le chemin des artefacts de build que tu veux télécharger
+
