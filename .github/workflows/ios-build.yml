@@ -13,31 +13,30 @@ jobs:
     runs-on: macos-latest  # Utilise le dernier runner macOS
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'  # Spécifiez la version de Node.js que vous utilisez
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Spécifiez la version de Node.js que vous utilisez
 
-    - name: Install dependencies
-      run: npm install  # Installe les dépendances npm
+      - name: Install dependencies
+        run: npm install  # Installe les dépendances npm
 
-    - name: Install CocoaPods dependencies
-      run: cd ios && pod install  # Installe les dépendances CocoaPods
+      - name: Install CocoaPods dependencies
+        run: cd ios && pod install  # Installe les dépendances CocoaPods
 
-    - name: Build iOS
-      run: |
-        xcodebuild clean -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme
-        xcodebuild build -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
-      env:
-        # Ajoutez ici les variables d'environnement nécessaires, comme les clés de signature
-        # par exemple, MATCH_PASSWORD, APP_STORE_CONNECT_API_KEY, etc.
+      - name: Build iOS
+        run: |
+          xcodebuild clean -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme
+          xcodebuild build -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
+        env:
+          # Ajoutez ici les variables d'environnement nécessaires, comme les clés de signature
+          # par exemple, MATCH_PASSWORD, APP_STORE_CONNECT_API_KEY, etc.
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v2
-      with:
-        name: build
-        path: ios/build  # Chemin vers les artefacts de build que vous souhaitez télécharger
-
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: ios/build  # Chemin vers les artefacts de build que vous souhaitez télécharger
