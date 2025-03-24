@@ -48,5 +48,20 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Cette application nécessite l'accès à votre position pour fonctionner.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Cette application nécessite l'accès pour des fonctionnalités personnalisées.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Accès à votre position requis en arrière-plan.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Accès à votre position requis pour des fonctionnalités spécifiques.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+	    <string>fetch</string>
+	    <string>remote-notification</string>
+	</array>
 </dict>
 </plist>
