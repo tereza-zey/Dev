@@ -10,26 +10,6 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
-post_install do |installer|
-  installer.pods_project.targets.each do |target|
-    target.build_configurations.each do |config|
-      # Ajouter les Header Search Paths
-      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
-      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React"
-      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Base"
-      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Modules"
-      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/ReactCommon"
-      config.build_settings['HEADER_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Accessibility.framework/Headers'
-
-      # Ajouter les Framework Search Paths
-      config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
-      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods"
-      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods/FirebaseCore"
-      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks'
-    end
-  end
-end
-
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
@@ -39,6 +19,7 @@ end
 target 'NSTApp' do
   config = use_native_modules!
 
+  # Dépendances du projet
   pod 'Firebase/Core', :modular_headers => true
   pod 'GoogleUtilities', :modular_headers => true
   pod 'Firebase/Analytics', :modular_headers => true
@@ -60,14 +41,32 @@ target 'NSTApp' do
     :app_path => "#{Pod::Config.instance.installation_root}/..",
     :hermes_enabled => true
   )
+end
 
-  post_install do |installer|
-    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
-    react_native_post_install(
-      installer,
-      config[:reactNativePath],
-      :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
-    )
+# Bloc unique pour post-installation
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Ajouter les Header Search Paths
+      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Base"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Modules"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/ReactCommon"
+      config.build_settings['HEADER_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Accessibility.framework/Headers'
+
+      # Ajouter les Framework Search Paths
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods"
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods/FirebaseCore"
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks'
+    end
   end
+
+  # Ajout du post_install pour React Native
+  react_native_post_install(
+    installer,
+    config[:reactNativePath],
+    :mac_catalyst_enabled => false
+  )
 end
