@@ -32,8 +32,9 @@ jobs:
           xcodebuild clean -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme
           xcodebuild build -workspace ios/YourProject.xcworkspace -scheme YourProjectScheme -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=16.4'
         env:
-          # Ajoutez ici les variables d'environnement nécessaires, comme les clés de signature
-          # par exemple, MATCH_PASSWORD, APP_STORE_CONNECT_API_KEY, etc.
+          # Ajoutez ici les variables d'environnement nécessaires, par exemple :
+          # MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+          # APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v2
