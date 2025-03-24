@@ -17,6 +17,8 @@ if linkage != nil
 end
 
 target 'NSTApp' do
+
+  config = use_native_modules!
   # Utilisation de React Native
   use_react_native!(
     :path => config[:reactNativePath],
