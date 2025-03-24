@@ -19,9 +19,10 @@ end
 target 'NSTApp' do
   # Utilisation de React Native
   use_react_native!(
-    :path => File.join(__dir__, '../node_modules/react-native'),
-    :hermes_enabled => true,
-    :fabric_enabled => false
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :hermes_enabled => true
   )
 
   # Dépendances du projet
