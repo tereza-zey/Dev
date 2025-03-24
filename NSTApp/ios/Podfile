@@ -10,6 +10,25 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
 
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Ajouter les Header Search Paths
+      config.build_settings['HEADER_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Base"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Modules"
+      config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/ReactCommon"
+
+      # Ajouter les Framework Search Paths
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods"
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods/FirebaseCore"
+    end
+  end
+end
+
+
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
