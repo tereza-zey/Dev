@@ -5,7 +5,7 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-#use_modular_headers!
+# use_modular_headers!
 
 platform :ios, min_ios_version_supported
 prepare_react_native_project!
@@ -19,15 +19,16 @@ post_install do |installer|
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Base"
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/React/Modules"
       config.build_settings['HEADER_SEARCH_PATHS'] << "$(SRCROOT)/node_modules/react-native/ReactCommon"
+      config.build_settings['HEADER_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks/Accessibility.framework/Headers'
 
       # Ajouter les Framework Search Paths
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] ||= ['$(inherited)']
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods"
       config.build_settings['FRAMEWORK_SEARCH_PATHS'] << "$(SRCROOT)/ios/Pods/FirebaseCore"
+      config.build_settings['FRAMEWORK_SEARCH_PATHS'] << '/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk/System/Library/Frameworks'
     end
   end
 end
-
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -51,9 +52,7 @@ target 'NSTApp' do
   pod 'react-native-netinfo', :path => '../node_modules/@react-native-community/netinfo', :modular_headers => true
   
   pod 'react-native-webview', :path => '../node_modules/react-native-webview', :modular_headers => true
-  # Ajoutez le pod pour la géolocalisation
   pod 'react-native-geolocation', :path => '../node_modules/@react-native-community/geolocation', :modular_headers => true
-  pod 'RNPermissions', :path => '../node_modules/react-native-permissions', :modular_headers => true
 
   use_react_native!(
     :path => config[:reactNativePath],
