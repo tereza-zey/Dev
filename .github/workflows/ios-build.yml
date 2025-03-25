@@ -42,7 +42,7 @@ jobs:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v2  # Télécharge les artefacts de la build
+      uses: actions/upload-artifact@v4  # Télécharge les artefacts de la build
       with:
         name: ios-build-artifacts  # Le nom des artefacts que tu veux télécharger
         path: ios/build/  # Spécifie le chemin des artefacts de build que tu veux télécharger
