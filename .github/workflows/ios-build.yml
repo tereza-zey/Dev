@@ -3,33 +3,33 @@ name: Build iOS
 on:
   push:
     branches:
-      - main  # Déclenche le workflow sur les pushes vers la branche main
+      - main
   pull_request:
     branches:
-      - main  # Déclenche le workflow sur les pull requests vers la branche main
+      - main
 
 jobs:
   build:
-    runs-on: macos-latest  # Utilise le dernier runner macOS
+    runs-on: macos-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2  # Cloner le dépôt
+      uses: actions/checkout@v2
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # Spécifie la version de Node.js que tu utilises
-        
+        node-version: '16'
+
     - name: Navigate to project directory
       run: cd NSTApp
-      
+
     - name: Clean npm cache
-      run: npm cache clean --force  # Nettoie le cache npm
+      run: npm cache clean --force
       working-directory: NSTApp
 
     - name: Install dependencies
-      run: npm install  # Installe les dépendances npm
+      run: npm install
       working-directory: NSTApp
 
     - name: Update CocoaPods
@@ -37,9 +37,9 @@ jobs:
 
     - name: Clean CocoaPods Cache
       run: pod cache clean --all
-      
+
     - name: Install CocoaPods dependencies
-      run: cd ios && pod install --verbose  # Installe les dépendances CocoaPods et ajoute --verbose pour plus de logs
+      run: cd ios && pod install --verbose
       working-directory: NSTApp
 
     - name: Cache CocoaPods
@@ -50,21 +50,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pods-
 
-    - name: List available simulators
-      run: xcrun simctl list devices  # Liste les simulateurs disponibles
-
     - name: Build iOS
       run: |
-        xcodebuild clean -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme  # Nettoie le projet avec le bon workspace et scheme
-        xcodebuild build -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14,OS=16.4' -verbose  # Lance la build sur un simulateur spécifique et affiche les logs détaillés
+        xcodebuild clean -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme
+        xcodebuild build -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -verbose
       env:
-        # Ajoute ici des variables d'environnement nécessaires, comme les clés de signature, MATCH_PASSWORD, etc.
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       working-directory: NSTApp
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v4  # Télécharge les artefacts de la build
+      uses: actions/upload-artifact@v4
       with:
-        name: ios-build-artifacts  # Le nom des artefacts que tu veux télécharger
+        name: ios-build-artifacts
         path: NSTApp/ios/build/
-
