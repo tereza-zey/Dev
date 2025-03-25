@@ -22,19 +22,19 @@ jobs:
         node-version: '16'  # Spécifie la version de Node.js que tu utilises
         
     - name: Navigate to project directory
-      run: cd Dev/NSTApp
+      run: cd NSTApp
       
     - name: Clean npm cache
       run: npm cache clean --force  # Nettoie le cache npm
-      working-directory: Dev/NSTApp
+      working-directory: NSTApp
 
     - name: Install dependencies
       run: npm install  # Installe les dépendances npm
-      working-directory: Dev/NSTApp
+      working-directory: NSTApp
 
     - name: Install CocoaPods dependencies
       run: cd ios && pod install --verbose  # Installe les dépendances CocoaPods et ajoute --verbose pour plus de logs
-      working-directory: Dev/NSTApp
+      working-directory: NSTApp
 
     - name: List available simulators
       run: xcrun simctl list devices  # Liste les simulateurs disponibles
@@ -46,11 +46,11 @@ jobs:
       env:
         # Ajoute ici des variables d'environnement nécessaires, comme les clés de signature, MATCH_PASSWORD, etc.
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
-      working-directory: Dev/NSTApp
+      working-directory: NSTApp
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4  # Télécharge les artefacts de la build
       with:
         name: ios-build-artifacts  # Le nom des artefacts que tu veux télécharger
-        path: Dev/NSTApp/ios/build/
+        path: NSTApp/ios/build/
 
