@@ -32,9 +32,23 @@ jobs:
       run: npm install  # Installe les dépendances npm
       working-directory: NSTApp
 
+    - name: Update CocoaPods
+      run: gem install cocoapods
+
+    - name: Clean CocoaPods Cache
+      run: pod cache clean --all
+      
     - name: Install CocoaPods dependencies
       run: cd ios && pod install --verbose  # Installe les dépendances CocoaPods et ajoute --verbose pour plus de logs
       working-directory: NSTApp
+
+    - name: Cache CocoaPods
+      uses: actions/cache@v3
+      with:
+        path: ~/.cocoapods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
 
     - name: List available simulators
       run: xcrun simctl list devices  # Liste les simulateurs disponibles
