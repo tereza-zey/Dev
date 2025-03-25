@@ -40,6 +40,7 @@ jobs:
       env:
         # Ajoute ici des variables d'environnement nécessaires, comme les clés de signature, MATCH_PASSWORD, etc.
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+      working-directory: Dev/NSTApp
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4  # Télécharge les artefacts de la build
