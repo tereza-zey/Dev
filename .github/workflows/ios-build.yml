@@ -35,11 +35,17 @@ jobs:
     - name: Update CocoaPods
       run: gem install cocoapods
 
+    - name: Verify Podfile
+      run: pod lib lint --verbose
+      working-directory: NSTApp/ios
+
     - name: Clean CocoaPods Cache
       run: pod cache clean --all
 
     - name: Install CocoaPods dependencies
-      run: cd ios && pod install --verbose
+      run: |
+        cd ios
+        pod install --verbose
       working-directory: NSTApp
 
     - name: Cache CocoaPods
