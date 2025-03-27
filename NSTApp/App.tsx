@@ -8,13 +8,16 @@ import {
   Linking,
   BackHandler,
   View,
-  Text
+  Text,
+  Dimensions
 } from 'react-native';
 import {WebView} from 'react-native-webview';
 import messaging from '@react-native-firebase/messaging';
 import { getApp } from '@react-native-firebase/app';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import NetInfo from '@react-native-community/netinfo';
+import Geolocation from '@react-native-community/geolocation';
+
 
 // Fonction pour initialiser Firebase
 const initializeFirebase = () => {
@@ -95,6 +98,7 @@ function App(): React.JSX.Element {
           })();
         `);
         console.log("Statut des permissions envoyé à la WebView");
+        requestLocation();
         if (fcmToken) {
           webViewRef.current.injectJavaScript(`
             (function() {
@@ -236,6 +240,51 @@ function App(): React.JSX.Element {
     }
   };
   
+  const requestLocation = async () => {
+    try {
+      const locationPerm = Platform.select({
+        android: PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION,
+        ios: PERMISSIONS.IOS.LOCATION_WHEN_IN_USE,
+      });
+
+      if (locationPerm) {
+        const status = await check(locationPerm);
+        if (status === RESULTS.GRANTED) {
+          Geolocation.getCurrentPosition(
+            (position) => {
+              console.log('Position GPS obtenue:', position);
+              if (webViewRef.current) {
+                webViewRef.current.injectJavaScript(`
+                  (function() {
+                    window.postMessage(JSON.stringify({
+                      type: 'LOCATION_UPDATE',
+                      location: {
+                        latitude: ${position.coords.latitude},
+                        longitude: ${position.coords.longitude}
+                      }
+                    }), '*');
+                    true;
+                  })();
+                `);
+              }
+            },
+            (error) => {
+              console.error('Erreur lors de la récupération de la position GPS:', error);
+            },
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 },
+          );
+        } else if (status === RESULTS.DENIED) {
+          //const result = await request(locationPerm);
+          //if (result === RESULTS.GRANTED) {
+          //  requestLocation();
+          //}
+        }
+      }
+    } catch (error) {
+      console.error('Erreur lors de la demande de position GPS:', error);
+    }
+  }
+
 
   const handleWebViewMessage = async (event: any) => {
     try {
@@ -252,6 +301,10 @@ function App(): React.JSX.Element {
       if (data.type === 'WEBVIEW_READY') {
         await refreshFcmToken();
         await checkAndSendPermissionsStatus();
+      }
+
+      if (data.type === 'GET_LOCATION') {
+        await requestLocation();
       }
     } catch (error) {
       console.error("Erreur lors du traitement du message de la WebView:", error);
@@ -286,7 +339,6 @@ function App(): React.JSX.Element {
     setFcmToken(token);
     await checkAndSendPermissionsStatus();
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
@@ -320,6 +372,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+    width: Dimensions.get('screen').width,
+    height: Dimensions.get('screen').height
   },
   webview: {
     flex: 1,
