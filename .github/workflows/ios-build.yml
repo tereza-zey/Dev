@@ -41,6 +41,10 @@ jobs:
         pod install --verbose
       working-directory: NSTApp/ios
 
+    - name: Update CocoaPods dependencies
+      run: pod update --no-repo-update
+      working-directory: NSTApp/ios
+
     - name: Install CocoaPods dependencies
       run: |
         cd ios
@@ -67,4 +71,3 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ios-build-artifacts
-        path: NSTApp/ios/build/
