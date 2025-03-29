@@ -17,6 +17,7 @@ import { getApp } from '@react-native-firebase/app';
 import {check, request, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import NetInfo from '@react-native-community/netinfo';
 import Geolocation from '@react-native-community/geolocation';
+import config from './src/config/config'; // Importer le fichier de configuration
 
 
 // Fonction pour initialiser Firebase
@@ -66,6 +67,42 @@ function App(): React.JSX.Element {
 
     return () => {
       unsubscribe();
+    };
+  }, []);
+
+
+  // Ajoutez cette logique dans le `useEffect` principal
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      if (!event.url) return;
+      
+      //Alert.alert("URL reçue : ", event.url);
+      console.log("URL reçue : ", event.url);
+      
+  
+      if (webViewRef.current) {
+        webViewRef.current.injectJavaScript(`
+          (function() {
+            window.location.href = '${event.url}';
+          })();
+        `);
+      }
+    };
+  
+    // Écoute les liens ouverts lorsque l'application est en cours d'exécution
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+  
+    // Vérifie si l'application a été ouverte avec un lien au démarrage
+    Linking.getInitialURL()
+      .then((url) => {
+        if (url) {
+          handleDeepLink({ url });
+        }
+      })
+      .catch(err => console.error("Erreur lors de la récupération de l'URL initiale", err));
+  
+    return () => {
+      subscription.remove(); // Utilisez remove() au lieu de removeEventListener
     };
   }, []);
 
@@ -345,7 +382,7 @@ function App(): React.JSX.Element {
       {isConnected ? (
         <WebView
           ref={webViewRef}
-          source={{ uri: 'https://papadum.tereza.fr/mobileapp/home' }}
+          source={{ uri: config.BASE_URL }}
           style={styles.webview}
           javaScriptEnabled={true}
           domStorageEnabled={true}
