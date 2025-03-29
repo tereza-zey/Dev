@@ -35,8 +35,11 @@ jobs:
     - name: Update CocoaPods
       run: gem install cocoapods
 
-    - name: Clean CocoaPods Cache
-      run: pod cache clean --all
+    - name: Clean CocoaPods installation
+      run: |
+        rm -rf ios/Pods ios/Podfile.lock
+        pod install --verbose
+      working-directory: NSTApp/ios
 
     - name: Install CocoaPods dependencies
       run: |
