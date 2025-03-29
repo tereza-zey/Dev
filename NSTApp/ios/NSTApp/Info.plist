@@ -63,5 +63,20 @@
 	    <string>fetch</string>
 	    <string>remote-notification</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>fr.tereza.papadum</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>papadum</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+	</array>
 </dict>
 </plist>
