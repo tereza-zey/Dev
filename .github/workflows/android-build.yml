@@ -34,9 +34,7 @@ jobs:
       working-directory: NSTApp
 
     - name: Cache Gradle dependencies
-      run: |
-        mkdir -p ~/.gradle/caches
-        cp -r NSTApp/android/.gradle/* ~/.gradle/caches/
+      uses: actions/cache@v3
       with:
         path: ~/.gradle/caches
         key: gradle-${{ runner.os }}-${{ hashFiles('NSTApp/android/**/*.gradle*', 'NSTApp/android/**/gradle-wrapper.properties') }}
