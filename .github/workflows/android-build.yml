@@ -40,6 +40,11 @@ jobs:
           cd android
           chmod +x gradlew
 
+      - name: Clean project
+        run: |
+          cd android
+          ./gradlew clean
+
       - name: Build Android App
         run: |
           cd android
