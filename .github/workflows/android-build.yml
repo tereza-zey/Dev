@@ -18,15 +18,21 @@ jobs:
 
     - name: Fix working directory
       run: |
+        echo "Current workspace: $GITHUB_WORKSPACE"
         if [[ "$GITHUB_WORKSPACE" == "/home/runner/work/Dev/Dev" ]]; then
-          echo "Detected incorrect workspace. Moving up one level."
+          echo "Fixing incorrect workspace..."
           mv * ../ && cd .. && rm -rf Dev
           echo "NEW_WORKSPACE=$(pwd)" >> $GITHUB_ENV
         else
-          echo "Workspace is correct: $GITHUB_WORKSPACE"
+          echo "Workspace is correct."
           echo "NEW_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
         fi
       working-directory: /home/runner/work/Dev
+
+    - name: Debug - Check workspace
+      run: |
+        echo "Final workspace: $NEW_WORKSPACE"
+        ls -la $NEW_WORKSPACE
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
