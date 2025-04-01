@@ -15,9 +15,21 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-    
+
     - name: Debug working directory
-      run: pwd && ls -la
+      run: |
+        echo "Current working directory:"
+        pwd
+        echo "Listing files:"
+        ls -la
+
+    - name: Fix working directory if necessary
+      run: |
+        if [ -d "Dev" ]; then
+          echo "Moving into Dev"
+          mv Dev/* . && rmdir Dev
+        fi
+      working-directory: /home/runner/work/
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -53,6 +65,11 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
       working-directory: NSTApp
+
+    - name: Ensure autolinking directory exists
+      run: |
+        mkdir -p NSTApp/android/build/generated/autolinking/
+        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > NSTApp/android/build/generated/autolinking/autolinking.json
 
     - name: Build Android APK
       run: |
