@@ -1,4 +1,5 @@
 name: Build Android
+
 on:
   push:
     branches:
@@ -6,18 +7,23 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
     
+    - name: Debug working directory
+      run: pwd && ls -la
+
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-        
+
     - name: Cache npm dependencies
       uses: actions/cache@v3
       with:
@@ -25,17 +31,17 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('NSTApp/**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-    
+
     - name: Install dependencies
       run: npm install
       working-directory: NSTApp
-      
+
     - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
-        
+
     - name: Cache Gradle dependencies
       uses: actions/cache@v3
       with:
@@ -43,71 +49,16 @@ jobs:
         key: gradle-${{ runner.os }}-${{ hashFiles('NSTApp/android/**/*.gradle*', 'NSTApp/android/**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-${{ runner.os }}-
-    
+
     - name: Grant execute permission for gradlew
-      run: chmod +x ./android/gradlew
+      run: chmod +x android/gradlew
       working-directory: NSTApp
-    
-    - name: Create patches directory and patch file
-      run: |
-        mkdir -p android/patches
-        cat << 'EOF' > android/patches/react-native+0.72.5.patch
-        diff --git a/node_modules/react-native/react.gradle b/node_modules/react-native/react.gradle
-        index cc5649c..7538dd0 100644
-        --- a/node_modules/react-native/react.gradle
-        +++ b/node_modules/react-native/react.gradle
-        @@ -174,6 +174,13 @@ afterEvaluate {
-                 }
-             }
-         
-        +    // Fix for autolink issue
-        +    tasks.whenTaskAdded { task ->
-        +        if (task.name == "generateAutolinkingPackageList") {
-        +            task.doFirst {
-        +                new File("\${project.buildDir}/generated/autolinking/autolinking.json").text = '{"reactNativePath":"../node_modules/react-native","dependencies":{}}'
-        +            }
-        +        }
-        +    }
-         }
-         
-         /**
-        EOF
-        ls -la android/patches/
-      working-directory: NSTApp
-      
-    - name: Install patch-package
-      run: npm install --save-dev patch-package
-      working-directory: NSTApp
-    
-    - name: Apply patch to fix autolinking
-      run: |
-        mkdir -p node_modules/react-native
-        cp -f android/patches/react-native+0.72.5.patch ./patches/
-        npx patch-package
-      working-directory: NSTApp
-    
-    - name: Force creation of autolinking directory
-      run: |
-        mkdir -p android/app/build/generated/autolinking/
-        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/app/build/generated/autolinking/autolinking.json
-        mkdir -p android/build/generated/autolinking/
-        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/build/generated/autolinking/autolinking.json
-      working-directory: NSTApp
-    
-    - name: Modify build.gradle to skip autolinking
-      run: |
-        if grep -q "apply from: \"../../node_modules/react-native/react.gradle\"" android/app/build.gradle; then
-          echo "Modifying build.gradle to add autolinking fix"
-          sed -i '/apply from: "..\/..\/node_modules\/react-native\/react.gradle"/a\\ndef autolinkingDir = new File("$buildDir/generated/autolinking")\nif (!autolinkingDir.exists()) {\n    autolinkingDir.mkdirs()\n    new File(autolinkingDir, "autolinking.json").text = '\''{"reactNativePath":"../node_modules/react-native","dependencies":{}}'\''\n}' android/app/build.gradle
-        fi
-      working-directory: NSTApp
-    
+
     - name: Build Android APK
       run: |
-        cd android
+        cd NSTApp/android
         ./gradlew assembleRelease --stacktrace
-      working-directory: NSTApp
-    
+
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
