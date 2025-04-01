@@ -33,20 +33,36 @@ jobs:
 
       - name: Install dependencies
         run: |
+          pwd  # Affiche le répertoire courant
           npm install
 
       - name: Make gradlew executable
         run: |
+          pwd  # Affiche le répertoire courant
           cd android
           chmod +x gradlew
 
       - name: Clean project
         run: |
+          pwd  # Affiche le répertoire courant
           cd android
           ./gradlew clean
 
       - name: Build Android App
         run: |
-          pwd
+          pwd  # Affiche le répertoire courant
           cd android
           ./gradlew assembleRelease
+
+      - name: List generated APK files
+        run: |
+          pwd  # Affiche le répertoire courant
+          cd android
+          ls -l app/build/outputs/apk/
+
+      - name: Upload problems report
+        if: failure()
+        uses: actions/upload-artifact@v2
+        with:
+          name: problems-report
+          path: NSTApp/android/build/reports/problems/problems-report.html
