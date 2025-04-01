@@ -35,11 +35,7 @@ jobs:
             npm install
       working-directory: NSTApp
 
-    - name: Link React Native dependencies
-      run: |
-        cd android
-        ./gradlew :app:clean
-      working-directory: NSTApp
+
 
     - name: Cache Gradle dependencies
       uses: actions/cache@v3
@@ -59,6 +55,12 @@ jobs:
       run: chmod +x android/gradlew
       working-directory: NSTApp
 
+    - name: Link React Native dependencies
+      run: |
+        cd android
+        ./gradlew :app:clean
+      working-directory: NSTApp
+      
     - name: Clean Android build
       run: |
         cd android
