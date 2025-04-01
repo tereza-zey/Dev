@@ -21,12 +21,13 @@ jobs:
       with:
         node-version: '16'
 
-    - name: Navigate to project directory
-      run: cd NSTApp
-
-    - name: Clean npm cache
-      run: npm cache clean --force
-      working-directory: NSTApp
+    - name: Cache npm dependencies
+      uses: actions/cache@v3
+      with:
+        path: NSTApp/node_modules
+        key: ${{ runner.os }}-node-${{ hashFiles('NSTApp/package-lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-node-
 
     - name: Install dependencies
       run: npm install
@@ -35,38 +36,38 @@ jobs:
     - name: Update CocoaPods
       run: gem install cocoapods
 
-    - name: Clean CocoaPods installation
-      run: |
-        rm -rf ios/Pods ios/Podfile.lock
-      working-directory: NSTApp/ios
-
-    - name: Update CocoaPods dependencies
-      run: pod update --no-repo-update
-      working-directory: NSTApp/ios
-
-    - name: Install CocoaPods dependencies
-      run: |
-        cd ios
-        pod install --verbose
-      working-directory: NSTApp
-
     - name: Cache CocoaPods
       uses: actions/cache@v3
       with:
-        path: ~/.cocoapods
-        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        path: |
+          NSTApp/ios/Pods
+          NSTApp/ios/Podfile.lock
+        key: ${{ runner.os }}-pods-${{ hashFiles('NSTApp/ios/Podfile.lock') }}
         restore-keys: |
           ${{ runner.os }}-pods-
 
-    - name: Build iOS
+    - name: Install CocoaPods dependencies
+      run: pod install --verbose
+      working-directory: NSTApp/ios
+
+    - name: Verify if build is necessary
+      id: check_changes
       run: |
-        xcodebuild clean -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme
-        xcodebuild build -workspace ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -verbose
+        git diff --quiet HEAD^ HEAD NSTApp/ios || echo "BUILD_NEEDED=true" >> $GITHUB_ENV
+
+    - name: Build iOS
+      if: env.BUILD_NEEDED == 'true'
+      run: |
+        xcodebuild clean -workspace NSTApp/ios/NSTApp.xcworkspace -scheme NSTAppScheme
+        xcodebuild build -workspace NSTApp/ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -verbose
       env:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       working-directory: NSTApp
 
     - name: Upload build artifacts
+      if: env.BUILD_NEEDED == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ios-build-artifacts
+        path: NSTApp/ios/build/
+        if-no-files-found: ignore
