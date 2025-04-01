@@ -67,16 +67,16 @@ jobs:
         ./gradlew clean
       working-directory: NSTApp
 
-    - name: Ensure autolinking directory exists
+    - name: Create autolinking file
       run: |
         mkdir -p android/build/generated/autolinking
-        echo "{}" > android/build/generated/autolinking/autolinking.json
+        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/build/generated/autolinking/autolinking.json
       working-directory: NSTApp
       
     - name: Build Android APK
       run: |
         cd android
-        ./gradlew assembleRelease
+        ./gradlew assembleRelease --info
       working-directory: NSTApp
 
     - name: Upload APK artifact
