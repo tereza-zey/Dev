@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           pwd  # Affiche le répertoire courant
-          #npm install
+          npm install
 
       - name: Make gradlew executable
         run: |
