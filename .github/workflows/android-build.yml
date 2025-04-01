@@ -20,7 +20,6 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-      working-directory: NSTApp
 
     - name: Cache npm dependencies
       uses: actions/cache@v3
@@ -29,27 +28,26 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('NSTApp/**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-      working-directory: NSTApp
 
     - name: Install dependencies
       run: npm install
       working-directory: NSTApp
 
     - name: Cache Gradle dependencies
-      uses: actions/cache@v3
+      run: |
+        mkdir -p ~/.gradle/caches
+        cp -r NSTApp/android/.gradle/* ~/.gradle/caches/
       with:
         path: ~/.gradle/caches
         key: gradle-${{ runner.os }}-${{ hashFiles('NSTApp/android/**/*.gradle*', 'NSTApp/android/**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-${{ runner.os }}-
-      working-directory: NSTApp
 
     - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: 'temurin'
         java-version: '17'
-      working-directory: NSTApp
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
