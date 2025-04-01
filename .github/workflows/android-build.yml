@@ -58,6 +58,10 @@ jobs:
         rm -rf build/generated/* # Supprime les fichiers générés
       working-directory: NSTApp
 
+    - name: Generate autolinking files
+      run: npx react-native autolink-android
+      working-directory: NSTApp
+      
     - name: Build Android APK
       run: |
         cd android
