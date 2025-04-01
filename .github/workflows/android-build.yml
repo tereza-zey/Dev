@@ -18,26 +18,14 @@ jobs:
 
     - name: Fix working directory
       run: |
-        if [ "$GITHUB_WORKSPACE" == "/home/runner/work/Dev/Dev" ]; then
-          echo "Detected incorrect workspace. Moving up one level."
+        if [[ "$GITHUB_WORKSPACE" == "/home/runner/work/Dev/Dev" ]]; then
+          echo "Detected incorrect workspace. Moving files up one level."
           mv * ../ && cd .. && rm -rf Dev
           echo "NEW_WORKSPACE=/home/runner/work/Dev" >> $GITHUB_ENV
+        else
+          echo "Workspace is correct: $GITHUB_WORKSPACE"
+          echo "NEW_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
         fi
-
-    - name: Debug working directory
-      run: |
-        echo "Current working directory:"
-        pwd
-        echo "Listing files:"
-        ls -la
-
-    - name: Fix working directory if necessary
-      run: |
-        if [ -d "Dev" ]; then
-          echo "Moving into Dev"
-          mv Dev/* . && rmdir Dev
-        fi
-      working-directory: /home/runner/work/
 
     - name: Set up Node.js
       uses: actions/setup-node@v3
@@ -48,13 +36,13 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('NSTApp/**/package-lock.json') }}
+        key: ${{ runner.os }}-node-${{ hashFiles('${{ env.NEW_WORKSPACE }}/NSTApp/**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
 
     - name: Install dependencies
       run: npm install
-      working-directory: NSTApp
+      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -66,26 +54,22 @@ jobs:
       uses: actions/cache@v3
       with:
         path: ~/.gradle/caches
-        key: gradle-${{ runner.os }}-${{ hashFiles('NSTApp/android/**/*.gradle*', 'NSTApp/android/**/gradle-wrapper.properties') }}
+        key: gradle-${{ runner.os }}-${{ hashFiles('${{ env.NEW_WORKSPACE }}/NSTApp/android/**/*.gradle*', '${{ env.NEW_WORKSPACE }}/NSTApp/android/**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-${{ runner.os }}-
 
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
-      working-directory: NSTApp
-
-    - name: Ensure autolinking directory exists
-      run: |
-        mkdir -p NSTApp/android/build/generated/autolinking/
-        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > NSTApp/android/build/generated/autolinking/autolinking.json
+      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
 
     - name: Build Android APK
       run: |
-        cd NSTApp/android
+        cd android
         ./gradlew assembleRelease --stacktrace
+      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: android-build-artifacts
-        path: NSTApp/android/app/build/outputs/apk/release/*.apk
+        path: ${{ env.NEW_WORKSPACE }}/NSTApp/android/app/build/outputs/apk/release/*.apk
