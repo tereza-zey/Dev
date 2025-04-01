@@ -13,70 +13,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Fix working directory
-      run: |
-        echo "Current workspace: $GITHUB_WORKSPACE"
-        if [[ "$GITHUB_WORKSPACE" == "/home/runner/work/Dev/Dev" ]]; then
-          echo "Fixing incorrect workspace..."
-          mv * ../ && cd .. && rm -rf Dev
-          echo "NEW_WORKSPACE=$(pwd)" >> $GITHUB_ENV
-        else
-          echo "Workspace is correct."
-          echo "NEW_WORKSPACE=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-        fi
-      working-directory: /home/runner/work/Dev
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
 
-    - name: Debug - Check workspace
-      run: |
-        echo "Final workspace: $NEW_WORKSPACE"
-        ls -la $NEW_WORKSPACE
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Install dependencies
+        run: |
+          npm install
+          cd android
+          ./gradlew clean
 
-    - name: Cache npm dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.npm
-        key: ${{ runner.os }}-node-${{ hashFiles('${{ env.NEW_WORKSPACE }}/NSTApp/**/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-
-    - name: Install dependencies
-      run: npm install
-      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
-
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Cache Gradle dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.gradle/caches
-        key: gradle-${{ runner.os }}-${{ hashFiles('${{ env.NEW_WORKSPACE }}/NSTApp/android/**/*.gradle*', '${{ env.NEW_WORKSPACE }}/NSTApp/android/**/gradle-wrapper.properties') }}
-        restore-keys: |
-          gradle-${{ runner.os }}-
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
-      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
-
-    - name: Build Android APK
-      run: |
-        cd android
-        ./gradlew assembleRelease --stacktrace
-      working-directory: ${{ env.NEW_WORKSPACE }}/NSTApp
-
-    - name: Upload APK artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-build-artifacts
-        path: ${{ env.NEW_WORKSPACE }}/NSTApp/android/app/build/outputs/apk/release/*.apk
+      - name: Build Android App
+        run: |
+          cd android
+          ./gradlew assembleRelease
