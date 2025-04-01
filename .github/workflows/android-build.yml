@@ -8,13 +8,20 @@ on:
     branches:
       - main
 
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main  # Remplacez par la branche que vous souhaitez surveiller
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: Dev/NSTApp  # Définir le répertoire de travail par défaut
+        working-directory: NSTApp  # Le répertoire de travail est NSTApp à la racine du dépôt
 
     steps:
       - name: Checkout code
