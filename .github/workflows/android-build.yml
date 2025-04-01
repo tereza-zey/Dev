@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           pwd  # Affiche le répertoire courant
-          npm install
+          #npm install
 
       - name: Make gradlew executable
         run: |
@@ -51,7 +51,7 @@ jobs:
       - name: List files in autolinking directory
         run: |
           pwd  # Affiche le répertoire courant
-          ls -l
+          ls -l android/build/
           cd android/build/generated/autolinking
 
       - name: Display autolinking.json content
