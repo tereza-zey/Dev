@@ -48,8 +48,9 @@ jobs:
       run: chmod +x ./android/gradlew
       working-directory: NSTApp
     
-    - name: Create patch file for React Native autolink issue
+    - name: Create patches directory and patch file
       run: |
+        mkdir -p android/patches
         cat << 'EOF' > android/patches/react-native+0.72.5.patch
         diff --git a/node_modules/react-native/react.gradle b/node_modules/react-native/react.gradle
         index cc5649c..7538dd0 100644
@@ -63,7 +64,7 @@ jobs:
         +    tasks.whenTaskAdded { task ->
         +        if (task.name == "generateAutolinkingPackageList") {
         +            task.doFirst {
-        +                new File("${project.buildDir}/generated/autolinking/autolinking.json").text = '{"reactNativePath":"../node_modules/react-native","dependencies":{}}'
+        +                new File("\${project.buildDir}/generated/autolinking/autolinking.json").text = '{"reactNativePath":"../node_modules/react-native","dependencies":{}}'
         +            }
         +        }
         +    }
@@ -71,13 +72,17 @@ jobs:
          
          /**
         EOF
+        ls -la android/patches/
       working-directory: NSTApp
       
+    - name: Install patch-package
+      run: npm install --save-dev patch-package
+      working-directory: NSTApp
+    
     - name: Apply patch to fix autolinking
       run: |
         mkdir -p node_modules/react-native
-        mkdir -p android/patches
-        cat android/patches/react-native+0.72.5.patch || true
+        cp -f android/patches/react-native+0.72.5.patch ./patches/
         npx patch-package
       working-directory: NSTApp
     
@@ -87,6 +92,14 @@ jobs:
         echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/app/build/generated/autolinking/autolinking.json
         mkdir -p android/build/generated/autolinking/
         echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/build/generated/autolinking/autolinking.json
+      working-directory: NSTApp
+    
+    - name: Modify build.gradle to skip autolinking
+      run: |
+        if grep -q "apply from: \"../../node_modules/react-native/react.gradle\"" android/app/build.gradle; then
+          echo "Modifying build.gradle to add autolinking fix"
+          sed -i '/apply from: "..\/..\/node_modules\/react-native\/react.gradle"/a\\ndef autolinkingDir = new File("$buildDir/generated/autolinking")\nif (!autolinkingDir.exists()) {\n    autolinkingDir.mkdirs()\n    new File(autolinkingDir, "autolinking.json").text = '\''{"reactNativePath":"../node_modules/react-native","dependencies":{}}'\''\n}' android/app/build.gradle
+        fi
       working-directory: NSTApp
     
     - name: Build Android APK
