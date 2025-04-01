@@ -46,7 +46,7 @@ jobs:
         run: |
           pwd  # Affiche le répertoire courant
           cd android
-          ./gradlew clean
+          #./gradlew clean
 
       - name: Build Android App
         run: |
