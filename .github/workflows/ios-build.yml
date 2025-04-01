@@ -69,9 +69,7 @@ jobs:
       working-directory: NSTApp
 
     - name: Upload build artifacts
-      if: env.BUILD_NEEDED == 'true'
       uses: actions/upload-artifact@v4
       with:
         name: ios-build-artifacts
-        path: NSTApp/ios/build/
-        if-no-files-found: ignore
+        path: NSTApp/ios/build/**/*
