@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload problems report
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: problems-report
           path: NSTApp/android/build/reports/problems/problems-report.html
