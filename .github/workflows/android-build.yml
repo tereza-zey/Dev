@@ -47,5 +47,6 @@ jobs:
 
       - name: Build Android App
         run: |
+          pwd
           cd android
           ./gradlew assembleRelease
