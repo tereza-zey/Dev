@@ -12,6 +12,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: Dev/NSTApp  # Définir le répertoire de travail par défaut
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,16 +26,14 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
-      - name: Set up Node.js
+      - name: Set up Node.js 16
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '16'
 
       - name: Install dependencies
         run: |
           npm install
-          cd android
-          ./gradlew clean
 
       - name: Build Android App
         run: |
