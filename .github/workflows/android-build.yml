@@ -29,8 +29,16 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-node-
 
-    - name: Install dependencies
-      run: npm install
+    - name: Setup React Native Project  
+      run: |
+            npx react-native-clean-project --remove-iOS-build --remove-iOS-pods --remove-android-build --keep-node-modules
+            npm install
+      working-directory: NSTApp
+
+    - name: Link React Native dependencies
+      run: |
+        cd android
+        ./gradlew :app:clean
       working-directory: NSTApp
 
     - name: Cache Gradle dependencies
@@ -55,11 +63,12 @@ jobs:
       run: |
         cd android
         ./gradlew clean
-        rm -rf build/generated/* # Supprime les fichiers générés
       working-directory: NSTApp
 
-    - name: Generate autolinking files
-      run: npx react-native autolink-android
+    - name: Ensure autolinking directory exists
+      run: |
+        mkdir -p android/build/generated/autolinking
+        echo "{}" > android/build/generated/autolinking/autolinking.json
       working-directory: NSTApp
       
     - name: Build Android APK
