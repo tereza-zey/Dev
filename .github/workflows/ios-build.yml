@@ -60,10 +60,10 @@ jobs:
         git diff --quiet HEAD^ HEAD NSTApp/ios || echo "BUILD_NEEDED=true" >> $GITHUB_ENV
 
     - name: Build iOS
-      if: env.BUILD_NEEDED == 'true'
       run: |
-        xcodebuild clean -workspace NSTApp/ios/NSTApp.xcworkspace -scheme NSTAppScheme
-        xcodebuild build -workspace NSTApp/ios/NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -verbose
+          cd ios
+          xcodebuild clean -workspace NSTApp.xcworkspace -scheme NSTAppScheme
+          xcodebuild build -workspace NSTApp.xcworkspace -scheme NSTAppScheme -sdk iphonesimulator -verbose
       env:
         MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
       working-directory: NSTApp
