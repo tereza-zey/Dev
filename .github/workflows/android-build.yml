@@ -51,8 +51,8 @@ jobs:
       - name: List files in autolinking directory
         run: |
           pwd  # Affiche le répertoire courant
-          cd android/build/generated/autolinking
           ls -l
+          cd android/build/generated/autolinking
 
       - name: Display autolinking.json content
         run: |
