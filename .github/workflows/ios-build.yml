@@ -46,6 +46,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pods-
 
+    - name: Update Hermes Engine
+      run: pod update hermes-engine --no-repo-update
+      working-directory: NSTApp/ios
+    
     - name: Install CocoaPods dependencies
       run: pod install --verbose
       working-directory: NSTApp/ios
