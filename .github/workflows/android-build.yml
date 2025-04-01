@@ -48,6 +48,21 @@ jobs:
           cd android
           #./gradlew clean
 
+      - name: List files in autolinking directory
+        run: |
+          pwd  # Affiche le répertoire courant
+          cd android/build/generated/autolinking
+          ls -l
+
+      - name: Display autolinking.json content
+        run: |
+          pwd  # Affiche le répertoire courant
+          if [ -f android/build/generated/autolinking/autolinking.json ]; then
+            cat android/build/generated/autolinking/autolinking.json
+          else
+            echo "autolinking.json does not exist"
+          fi
+
       - name: Build Android App
         run: |
           pwd  # Affiche le répertoire courant
