@@ -1,5 +1,4 @@
 name: Build Android
-
 on:
   push:
     branches:
@@ -7,20 +6,18 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
-
+      uses: actions/checkout@v3
+    
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
         node-version: '16'
-
+        
     - name: Cache npm dependencies
       uses: actions/cache@v3
       with:
@@ -28,15 +25,17 @@ jobs:
         key: ${{ runner.os }}-node-${{ hashFiles('NSTApp/**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
-
-    - name: Setup React Native Project  
-      run: |
-            npx react-native-clean-project --remove-iOS-build --remove-iOS-pods --remove-android-build --keep-node-modules
-            npm install
+    
+    - name: Install dependencies
+      run: npm install
       working-directory: NSTApp
-
-
-
+      
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
     - name: Cache Gradle dependencies
       uses: actions/cache@v3
       with:
@@ -44,41 +43,36 @@ jobs:
         key: gradle-${{ runner.os }}-${{ hashFiles('NSTApp/android/**/*.gradle*', 'NSTApp/android/**/gradle-wrapper.properties') }}
         restore-keys: |
           gradle-${{ runner.os }}-
-
-    - name: Set up Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
-
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
-      working-directory: NSTApp
-
-    - name: Link React Native dependencies
+    
+    - name: Debug directory structure
       run: |
-        cd android
-        ./gradlew :app:clean
+        pwd
+        echo "GitHub workspace: $GITHUB_WORKSPACE"
+        ls -la
+        
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./android/gradlew
       working-directory: NSTApp
-      
+    
     - name: Clean Android build
       run: |
         cd android
         ./gradlew clean
       working-directory: NSTApp
-
-    - name: Create autolinking file
+    
+    - name: Create autolinking directory and file
       run: |
-        mkdir -p android/build/generated/autolinking
-        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > android/build/generated/autolinking/autolinking.json
-      working-directory: NSTApp
-      
+        mkdir -p $GITHUB_WORKSPACE/NSTApp/android/build/generated/autolinking
+        echo '{"reactNativePath":"../node_modules/react-native","dependencies":{}}' > $GITHUB_WORKSPACE/NSTApp/android/build/generated/autolinking/autolinking.json
+        ls -la $GITHUB_WORKSPACE/NSTApp/android/build/generated/autolinking/
+        cat $GITHUB_WORKSPACE/NSTApp/android/build/generated/autolinking/autolinking.json
+    
     - name: Build Android APK
       run: |
         cd android
-        ./gradlew assembleRelease --info
+        ./gradlew assembleRelease --stacktrace
       working-directory: NSTApp
-
+    
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
