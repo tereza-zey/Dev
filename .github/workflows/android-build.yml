@@ -16,6 +16,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
 
+    - name: Fix working directory
+      run: |
+        if [ "$GITHUB_WORKSPACE" == "/home/runner/work/Dev/Dev" ]; then
+          echo "Detected incorrect workspace. Moving up one level."
+          mv * ../ && cd .. && rm -rf Dev
+        fi
+
     - name: Debug working directory
       run: |
         echo "Current working directory:"
