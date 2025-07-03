@@ -15,7 +15,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: NSTApp  # Le répertoire de travail est NSTApp à la racine du dépôt
+        working-directory: NSTApp
 
     steps:
       - name: Checkout code
@@ -27,56 +27,56 @@ jobs:
           distribution: 'adopt'
           java-version: '17'
 
-      - name: Set up Node.js 16
+      - name: Set up Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: '16'
+          node-version: '18'
 
       - name: Install dependencies
         run: |
-          pwd  # Affiche le répertoire courant
+          echo "📦 Installing JS dependencies"
           npm install
+          echo "🔍 Verifying React Native config"
+          npx react-native config || echo "❌ react-native config failed"
 
       - name: Make gradlew executable
         run: |
-          pwd  # Affiche le répertoire courant
           cd android
           chmod +x gradlew
 
+      - name: Run autolinking task explicitly
+        run: |
+          echo "🔧 Running autolinking generation"
+          cd android
+          ./gradlew :app:generateAutolinkingPackageList --warning-mode all --stacktrace
+
+      - name: Check autolinking.json
+        run: |
+          echo "🔍 Checking autolinking.json"
+          if [ -f android/build/generated/autolinking/autolinking.json ]; then
+            echo "✅ autolinking.json found:"
+            cat android/build/generated/autolinking/autolinking.json
+          else
+            echo "❌ autolinking.json is missing"
+          fi
+
       - name: Clean project
         run: |
-          pwd  # Affiche le répertoire courant
           cd android
-          #./gradlew clean
-          ./gradlew :app:dependencies
+          ./gradlew clean
 
       - name: Build Android App
         run: |
-          pwd  # Affiche le répertoire courant
           cd android
           ./gradlew assembleRelease
 
       - name: List files in autolinking directory
         run: |
-          pwd  # Affiche le répertoire courant
-          ls -l android
-          cd android/build/generated/autolinking
-
-      - name: Display autolinking.json content
-        run: |
-          pwd  # Affiche le répertoire courant
-          if [ -f android/build/generated/autolinking/autolinking.json ]; then
-            cat android/build/generated/autolinking/autolinking.json
-          else
-            echo "autolinking.json does not exist"
-          fi
-
+          ls -l android/build/generated/autolinking || echo "autolinking folder missing"
 
       - name: List generated APK files
         run: |
-          pwd  # Affiche le répertoire courant
-          cd android
-          ls -l app/build/outputs/apk/
+          ls -l android/app/build/outputs/apk/ || echo "No APKs found"
 
       - name: Upload problems report
         if: failure()
