@@ -77,6 +77,13 @@ jobs:
       - name: List generated APK files
         run: |
           ls -l android/app/build/outputs/apk/ || echo "No APKs found"
+          
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: NSTApp/android/app/build/outputs/apk/release/app-release.apk
+
 
       - name: Upload problems report
         if: failure()
